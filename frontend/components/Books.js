@@ -16,16 +16,47 @@ export default function Books() {
   }, [])
 
   const fetchBooks = () => {
-
+    fetch('/api/books')
+    .then(res => {
+      if(!res.ok){
+        throw new Error('Network response is not OK!!')
+      }
+      const contentType = res.headers.get('Content-Type')
+      if(contentType.includes('application/json')){
+        return res.json()
+      }
+    })
+    .then(data => {
+      setBooks(data)
+    })
+    .catch(error => console.error('Failed to GET', error))
   }
 
   const deleteBook = id => {
-
+    console.log(`Delete book with ID ${id}`)
+    fetch(`/api/books/${id}`, {method: 'DELETE'})
+    .then(() => fetchBooks())
+    .catch(error => console.error('Failed to delete book', error))
   }
 
   const onSubmit = (event) => {
     event.preventDefault()
+    const url = bookForm.id 
+    ? `/api/books/${bookForm.id}` : '/api/books'
 
+    fetch(url, {
+      method: bookForm.id ? 'PUT' : 'POST',
+      body: JSON.stringify(bookForm),
+      headers: new Headers({
+        'Content-Type': 'application/json',
+        'X-Bloom': 'full-stack-web'
+      })
+    })
+    .then(() => {
+      fetchBooks()
+      setBookForm(initialForm)
+    })
+    .catch(err => console.error('failed to save book', err))
   }
 
   const onChange = (event) => {
